@@ -8,9 +8,13 @@ import gameplay.models.Connect4Game;
 import gameplay.models.User;
 import gameplay.responses.UserDetailResponse;
 import gameplay.responses.UserListResponse;
+import gameplay.utils.AuthManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.cassandra.repository.MapId;
 import org.springframework.data.cassandra.repository.support.BasicMapId;
 import org.springframework.http.HttpStatus;
@@ -34,6 +38,10 @@ public class UserController {
 
     @Autowired
     UserDao userDao;
+
+    @Autowired
+    @Qualifier(value = "RedisCacheManager")
+    private CacheManager redisCacheManager;
 
     @RequestMapping(value = "/user", method = RequestMethod.POST)
     @ResponseBody
@@ -60,6 +68,9 @@ public class UserController {
             serviceErrors.add(new ServiceError(0, "Internal Error"));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.APPLICATION_JSON).body(userDetailResponse);
         }
+
+        Cache cache = redisCacheManager.getCache("Authorization");
+        cache.putIfAbsent(userId.toString() + ':' + userId.toString(), userId);
 
         userDetailResponse.setUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON).body(userDetailResponse);

@@ -31,7 +31,6 @@ import java.util.UUID;
 @RestController
 public class BoardController {
     private static final Logger log = LoggerFactory.getLogger(BoardController.class);
-    private static final UUID ADMIN_UUID = UUID.fromString("c40bfc4e-377c-47f7-861e-3338b217105f");
 
     @Autowired
     CoreDao coreDao;

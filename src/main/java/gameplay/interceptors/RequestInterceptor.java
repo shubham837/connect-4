@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import gameplay.Application;
 import gameplay.dao.UserDao;
+import gameplay.utils.AuthManager;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -30,20 +31,18 @@ public class RequestInterceptor extends HandlerInterceptorAdapter{
         private static final Logger log = Logger.getLogger(RequestInterceptor.class);
 
         @Autowired
-        private RedisTemplate< Object, Object > redisTemplate;
-
-        @Autowired
         @Qualifier(value = "RedisCacheManager")
-        CacheManager redisCacheManager;
+        private CacheManager redisCacheManager;
+
 
         //before the actual handler will be executed
         public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
             log.info("Request Method: " + request.getMethod() + " URL: " + request.getRequestURI() + " Client Type: " + request.getHeader("CLIENT_TYPE")
                     + " Auth Key: " + request.getHeader("AUTH_KEY") + " Access Token: " + request.getHeader("ACCESS_TOKEN"));
 
+            AuthManager authManager = new AuthManager();
             UUID userId = checkAuthorization(request.getHeader("CLIENT_TYPE"), request.getHeader("AUTH_KEY"),
                     request.getHeader("ACCESS_TOKEN"));
-
 
             if ("GET".equals(request.getMethod())) {
                 checkETagHeader();
@@ -91,6 +90,7 @@ public class RequestInterceptor extends HandlerInterceptorAdapter{
             }
             return UUID.fromString((String)redisCacheElement.get());
         }
+
 
         private boolean checkETagHeader(){
             return true;
